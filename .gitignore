@@ -1,0 +1,34 @@
+# ==========================================
+# Resource Pack Assets & Build Outputs
+# ==========================================
+/input_pack/
+/build_addon/
+
+# Catch-all in case you rename the folders or zip packs in the root
+*.zip
+*_n.png
+*_s.png
+*_e.png
+
+# ==========================================
+# Python & Virtual Environments
+# ==========================================
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+env/
+.python-version
+
+# ==========================================
+# IDE, Editor & OS Swap Files
+# ==========================================
+.vscode/
+.idea/
+.antigravity/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
