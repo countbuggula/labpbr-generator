@@ -1,0 +1,1109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LabPBR 1.3 Automated Generator — Resource Pack Pipeline</title>
+  <style>
+    :root {
+      --bg-primary: #0d1117;
+      --bg-card: #161b22;
+      --bg-input: #090d13;
+      --border: #30363d;
+      --border-focus: #58a6ff;
+      --text-main: #e6edf3;
+      --text-muted: #8b949e;
+      --accent-blue: #2f81f7;
+      --accent-blue-hover: #388bfd;
+      --accent-green: #238636;
+      --accent-green-hover: #2ea043;
+      --accent-amber: #d29922;
+      --accent-red: #da3633;
+      --accent-cyan: #39c5cf;
+      --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      --font-mono: "Cascadia Code", "Fira Code", Consolas, "Courier New", monospace;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+      background-color: var(--bg-primary);
+      color: var(--text-main);
+      font-family: var(--font-sans);
+      line-height: 1.5;
+    }
+
+    .container {
+      max-width: 1240px;
+      margin: 0 auto;
+      padding: 24px;
+    }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 16px;
+      padding-bottom: 18px;
+      margin-bottom: 22px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    header h1 {
+      margin: 0;
+      font-size: 1.55rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .tag-spec {
+      font-size: 0.75rem;
+      padding: 3px 8px;
+      border-radius: 6px;
+      background: rgba(57, 197, 207, 0.15);
+      color: var(--accent-cyan);
+      border: 1px solid rgba(57, 197, 207, 0.35);
+      font-weight: 600;
+    }
+
+    header p {
+      margin: 4px 0 0 0;
+      color: var(--text-muted);
+      font-size: 0.9rem;
+    }
+
+    /* Status Grid */
+    .status-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+
+    @media (max-width: 960px) {
+      .status-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 18px;
+    }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+
+    .card-title {
+      font-size: 0.98rem;
+      font-weight: 600;
+      margin: 0;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .badge {
+      font-size: 0.75rem;
+      font-weight: 600;
+      padding: 2px 9px;
+      border-radius: 999px;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .badge-ok {
+      background: rgba(35, 134, 54, 0.2);
+      color: #56d364;
+      border: 1px solid rgba(86, 211, 100, 0.35);
+    }
+
+    .badge-warn {
+      background: rgba(210, 153, 34, 0.2);
+      color: #e3b341;
+      border: 1px solid rgba(227, 179, 65, 0.35);
+    }
+
+    .badge-err {
+      background: rgba(218, 54, 51, 0.2);
+      color: #f85149;
+      border: 1px solid rgba(248, 81, 73, 0.35);
+    }
+
+    .card-body {
+      font-size: 0.87rem;
+      color: var(--text-muted);
+    }
+
+    .module-pills {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin: 8px 0 12px 0;
+    }
+
+    .module-pill {
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-family: var(--font-mono);
+      font-size: 0.78rem;
+      background: var(--bg-input);
+      border: 1px solid var(--border);
+    }
+
+    .module-pill.ok {
+      border-color: rgba(86, 211, 100, 0.45);
+      color: #7ee787;
+    }
+
+    .module-pill.missing {
+      border-color: rgba(248, 81, 73, 0.55);
+      color: #ff7b72;
+    }
+
+    /* Main 2-column layout */
+    .main-grid {
+      display: grid;
+      grid-template-columns: 1.08fr 0.92fr;
+      gap: 20px;
+      align-items: start;
+    }
+
+    @media (max-width: 1024px) {
+      .main-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .section-title {
+      font-size: 1.05rem;
+      font-weight: 600;
+      margin: 0 0 14px 0;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .form-group {
+      margin-bottom: 15px;
+    }
+
+    .form-group label {
+      display: block;
+      font-size: 0.85rem;
+      font-weight: 600;
+      margin-bottom: 6px;
+      color: var(--text-main);
+    }
+
+    .form-hint {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      margin-top: 4px;
+    }
+
+    .input-row {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    input[type="text"],
+    select {
+      width: 100%;
+      padding: 8px 11px;
+      background: var(--bg-input);
+      color: var(--text-main);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      font-size: 0.88rem;
+      font-family: var(--font-mono);
+      outline: none;
+      transition: border-color 0.15s;
+    }
+
+    input[type="text"]:focus,
+    select:focus {
+      border-color: var(--border-focus);
+    }
+
+    input[type="text"]:disabled,
+    select:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    /* Buttons */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      padding: 8px 14px;
+      font-size: 0.86rem;
+      font-weight: 600;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      background: #21262d;
+      color: var(--text-main);
+      cursor: pointer;
+      text-decoration: none;
+      white-space: nowrap;
+      transition: background 0.15s, border-color 0.15s;
+    }
+
+    .btn:hover:not(:disabled) {
+      background: #30363d;
+      border-color: #8b949e;
+    }
+
+    .btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .btn-primary {
+      background: var(--accent-blue);
+      border-color: rgba(255, 255, 255, 0.15);
+      color: #ffffff;
+    }
+
+    .btn-primary:hover:not(:disabled) {
+      background: var(--accent-blue-hover);
+    }
+
+    .btn-success {
+      background: var(--accent-green);
+      border-color: rgba(255, 255, 255, 0.15);
+      color: #ffffff;
+      font-size: 0.96rem;
+      padding: 11px 20px;
+    }
+
+    .btn-success:hover:not(:disabled) {
+      background: var(--accent-green-hover);
+    }
+
+    .btn-danger {
+      background: var(--accent-red);
+      border-color: rgba(255, 255, 255, 0.15);
+      color: #ffffff;
+    }
+
+    .btn-danger:hover:not(:disabled) {
+      background: #f85149;
+    }
+
+    .btn-sm {
+      padding: 5px 10px;
+      font-size: 0.78rem;
+    }
+
+    /* Checkboxes */
+    .checkbox-group {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin: 14px 0;
+      padding: 12px;
+      background: rgba(9, 13, 19, 0.65);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+    }
+
+    .checkbox-label {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      cursor: pointer;
+      font-size: 0.87rem;
+      user-select: none;
+    }
+
+    .checkbox-label input[type="checkbox"] {
+      margin-top: 3px;
+      width: 16px;
+      height: 16px;
+      accent-color: var(--accent-blue);
+      cursor: pointer;
+    }
+
+    .flag-code {
+      font-family: var(--font-mono);
+      font-size: 0.78rem;
+      color: var(--accent-cyan);
+      background: rgba(57, 197, 207, 0.1);
+      padding: 1px 5px;
+      border-radius: 4px;
+    }
+
+    /* Alert / Callout Boxes */
+    .alert-box {
+      padding: 11px 13px;
+      border-radius: 7px;
+      font-size: 0.83rem;
+      margin-top: 10px;
+      display: none;
+    }
+
+    .alert-box.warn {
+      display: block;
+      background: rgba(210, 153, 34, 0.12);
+      border: 1px solid rgba(227, 179, 65, 0.4);
+      color: #e3b341;
+    }
+
+    .alert-box.err {
+      display: block;
+      background: rgba(218, 54, 51, 0.12);
+      border: 1px solid rgba(248, 81, 73, 0.4);
+      color: #ff7b72;
+    }
+
+    /* Command preview */
+    .cmd-preview {
+      background: var(--bg-input);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 9px 12px;
+      font-family: var(--font-mono);
+      font-size: 0.78rem;
+      color: #a5d6ff;
+      word-break: break-all;
+      margin-bottom: 14px;
+    }
+
+    /* Console Output */
+    .console-wrapper {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+    }
+
+    .console-toolbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+      gap: 8px;
+    }
+
+    .console-screen {
+      background: #05070a;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 14px;
+      height: 540px;
+      overflow-y: auto;
+      font-family: var(--font-mono);
+      font-size: 0.8rem;
+      line-height: 1.45;
+      color: #d2a8ff;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    .log-line {
+      margin: 0 0 2px 0;
+      color: #c9d1d9;
+    }
+
+    .log-line.success {
+      color: #56d364;
+    }
+
+    .log-line.warn {
+      color: #e3b341;
+    }
+
+    .log-line.llm {
+      color: #79c0ff;
+    }
+
+    .log-line.cmd {
+      color: #ffa657;
+      font-weight: 600;
+    }
+
+    .action-bar {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      margin-top: 12px;
+    }
+
+    .extract-banner {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+      padding: 12px 14px;
+      background: rgba(47, 129, 247, 0.1);
+      border: 1px solid rgba(47, 129, 247, 0.35);
+      border-radius: 8px;
+      margin-bottom: 16px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div>
+        <h1>
+          LabPBR 1.3 Resource Pack Generator
+          <span id="resolutionHeaderBadge" class="tag-spec">Pixel-Exact Pipeline</span>
+        </h1>
+        <p>Automated Normal (<code>_n.png</code>) &amp; Specular (<code>_s.png</code>) Add-on Builder for Blocks, Items, Armor, Mobs, Villagers, Paintings &amp; Banners</p>
+      </div>
+      <div style="display: flex; gap: 8px;">
+        <button class="btn btn-sm" onclick="refreshEnvironmentStatus()">&#x21bb; Re-check Environment</button>
+      </div>
+    </header>
+
+    <!-- Top Environment Detection Cards -->
+    <div class="status-grid">
+      <!-- 1. Python Detection Card -->
+      <div class="card">
+        <div class="card-header">
+          <h2 class="card-title">1. Python Runtime</h2>
+          <span id="pythonBadge" class="badge badge-warn">Checking...</span>
+        </div>
+        <div class="card-body">
+          <div id="pythonInfoText">Checking local Python bridge at <code>http://localhost:8765</code>...</div>
+          <div id="pythonMissingBox" class="alert-box err">
+            <strong>Python Not Detected or Server Offline</strong><br />
+            If Python 3 is not installed on your system, download it below (be sure to check <em>"Add python.exe to PATH"</em> during installation), then launch <code>launch_gui.bat</code>.
+            <div style="margin-top: 8px; display: flex; gap: 8px; flex-wrap: wrap;">
+              <a href="https://www.python.org/downloads/" target="_blank" rel="noopener" class="btn btn-primary btn-sm">Download Python 3 &rarr;</a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 2. Python Modules Detection Card -->
+      <div class="card">
+        <div class="card-header">
+          <h2 class="card-title">2. Required Python Modules</h2>
+          <span id="modulesBadge" class="badge badge-warn">Checking...</span>
+        </div>
+        <div class="card-body">
+          <div>Required packages for image &amp; channel packing:</div>
+          <div id="modulePills" class="module-pills">
+            <span class="module-pill">numpy</span>
+            <span class="module-pill">Pillow</span>
+            <span class="module-pill">requests</span>
+          </div>
+          <div id="modulesMissingBox" class="alert-box warn">
+            One or more required Python modules are missing.
+            <div style="margin-top: 8px;">
+              <button id="btnInstallModules" class="btn btn-primary btn-sm" onclick="installMissingModules()">
+                Install Missing Modules (pip)
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 3. Ollama Installation & Connection Card -->
+      <div class="card">
+        <div class="card-header">
+          <h2 class="card-title">3. Ollama Vision LLM</h2>
+          <span id="ollamaBadge" class="badge badge-warn">Checking...</span>
+        </div>
+        <div class="card-body">
+          <div id="ollamaInfoText">Checking Ollama installation and server connection...</div>
+
+          <!-- Shown when Ollama is not installed -->
+          <div id="ollamaNotInstalledBox" class="alert-box warn">
+            <strong>Ollama Not Detected</strong> — Download Ollama for AI vision profiling, or continue right now with <code>--no-llm</code> (Heuristic Mode).
+            <div style="margin-top: 8px; display: flex; gap: 8px; flex-wrap: wrap;">
+              <a href="https://ollama.com/download" target="_blank" rel="noopener" class="btn btn-primary btn-sm">Download Ollama &rarr;</a>
+            </div>
+          </div>
+
+          <!-- Shown when Ollama is installed but server is not running -->
+          <div id="ollamaNotRunningBox" class="alert-box warn">
+            Ollama is installed but cannot connect at <code id="ollamaUrlDisplay">http://localhost:11434</code>.
+            <div style="margin-top: 8px; display: flex; gap: 8px;">
+              <button class="btn btn-primary btn-sm" onclick="startOllamaServer()">Start Ollama Server</button>
+              <button class="btn btn-sm" onclick="enableNoLlmMode()">Use --no-llm Instead</button>
+            </div>
+          </div>
+
+          <!-- Shown when Ollama is running but no vision models are installed -->
+          <div id="ollamaNoModelsBox" class="alert-box warn">
+            <strong>No Vision Models Installed</strong> — Pull a recommended vision model:
+            <div style="margin-top: 8px; display: flex; gap: 6px; flex-wrap: wrap;">
+              <button class="btn btn-primary btn-sm" onclick="pullOllamaModel('qwen2.5vl:7b')">Pull qwen2.5vl:7b (Recommended)</button>
+              <button class="btn btn-sm" onclick="pullOllamaModel('llama3.2-vision:11b')">Pull llama3.2-vision</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Main Configuration + Console Columns -->
+    <div class="main-grid">
+      <!-- Left Column: Configuration & Controls -->
+      <div class="card">
+        <div class="section-title">
+          <span>Pack Directories &amp; Generator Options</span>
+          <span id="inputPackStatsBadge" class="badge badge-ok">Checking input_pack...</span>
+        </div>
+
+        <!-- Extract Resource Pack (.zip) Banner -->
+        <div class="extract-banner">
+          <div>
+            <strong style="font-size: 0.9rem;">Import Donor Resource Pack (.zip)</strong>
+            <div style="font-size: 0.8rem; color: var(--text-muted);">
+              Select any Minecraft resource pack <code>.zip</code> to automatically extract into your <code>input_pack</code> folder.
+            </div>
+          </div>
+          <button id="btnExtractPack" class="btn btn-primary" onclick="browseAndExtractZip()">
+            &#x1F4E6; Open &amp; Extract Resource Pack (.zip)
+          </button>
+        </div>
+
+        <!-- Input Directory -->
+        <div class="form-group">
+          <label for="inputDir">Input Pack Directory <span class="flag-code">-i / --input</span></label>
+          <div class="input-row">
+            <input type="text" id="inputDir" value="./input_pack" oninput="onConfigChanged()" />
+            <button class="btn" onclick="browsePath('inputDir', 'directory')">Browse...</button>
+          </div>
+          <div id="inputPackHint" class="form-hint">Path to the extracted donor Minecraft resource pack (any resolution).</div>
+        </div>
+
+        <!-- Output Directory -->
+        <div class="form-group">
+          <label for="outputDir">Output Add-on Directory <span class="flag-code">-o / --output</span></label>
+          <div class="input-row">
+            <input type="text" id="outputDir" value="./build_addon" oninput="onConfigChanged()" />
+            <button class="btn" onclick="browsePath('outputDir', 'directory')">Browse...</button>
+          </div>
+          <div class="form-hint">Standalone LabPBR overlay folder (contains only <code>pack.mcmeta</code>, <code>*_n.png</code>, and <code>*_s.png</code> matching the source resolution).</div>
+        </div>
+
+        <!-- Ollama Model Selector & Pull -->
+        <div class="form-group">
+          <label for="modelSelect">Ollama Vision Model <span class="flag-code">--model</span></label>
+          <div class="input-row">
+            <select id="modelSelect" onchange="onConfigChanged()">
+              <option value="qwen2.5vl:7b">qwen2.5vl:7b</option>
+            </select>
+            <button class="btn" title="Pull or update selected model in Ollama" onclick="promptPullModel()">
+              &#x2B07; Pull Model...
+            </button>
+          </div>
+          <div class="form-hint">Select an installed Ollama vision model, or click <em>Pull Model...</em> to download <code>qwen2.5vl:7b</code> or <code>llama3.2-vision</code>.</div>
+        </div>
+
+        <!-- Cache Path & Ollama URL Row -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+          <div class="form-group">
+            <label for="cacheFile">Material Profile Cache <span class="flag-code">-c / --cache</span></label>
+            <div class="input-row">
+              <input type="text" id="cacheFile" value="material_profiles.json" oninput="onConfigChanged()" />
+              <button class="btn btn-sm" onclick="browsePath('cacheFile', 'json_file')">Browse...</button>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="ollamaUrl">Ollama Server URL <span class="flag-code">--ollama-url</span></label>
+            <div class="input-row">
+              <input type="text" id="ollamaUrl" value="http://localhost:11434" oninput="onConfigChanged()" />
+            </div>
+          </div>
+        </div>
+
+        <!-- Optional CLI Flags Checkboxes -->
+        <div class="checkbox-group">
+          <label class="checkbox-label">
+            <input type="checkbox" id="flagNoLlm" onchange="onConfigChanged()" />
+            <div>
+              <strong>Run without Vision LLM</strong> <span class="flag-code">--no-llm</span>
+              <div class="form-hint">Skip Ollama VLM queries and use fast deterministic filename/pixel heuristics only.</div>
+            </div>
+          </label>
+
+          <label class="checkbox-label">
+            <input type="checkbox" id="flagRefreshCache" onchange="onConfigChanged()" />
+            <div>
+              <strong>Refresh Profile Cache</strong> <span class="flag-code">--refresh-cache</span>
+              <div class="form-hint">Ignore existing cached entries in <code>material_profiles.json</code> and recompute all profiles.</div>
+            </div>
+          </label>
+
+          <label class="checkbox-label">
+            <input type="checkbox" id="flagFlipY" onchange="onConfigChanged()" />
+            <div>
+              <strong>Flip Normal Y-Channel (DirectX Convention)</strong> <span class="flag-code">--flip-y</span>
+              <div class="form-hint">Invert the Green normal channel (<code>-Y</code> DirectX instead of LabPBR standard OpenGL <code>+Y</code>).</div>
+            </div>
+          </label>
+
+          <label class="checkbox-label">
+            <input type="checkbox" id="flagAutoZip" checked onchange="onConfigChanged()" />
+            <div style="width: 100%;">
+              <strong>Automatically package output into a <code>.zip</code> archive</strong>
+              <div class="form-hint" style="margin-bottom: 6px;">Creates a ready-to-use Minecraft resource pack zip once generation finishes:</div>
+              <input type="text" id="zipFileName" value="input_pack_pbr.zip" oninput="userEditedZipName = true; onConfigChanged();" />
+            </div>
+          </label>
+        </div>
+
+        <!-- Command Preview -->
+        <div class="form-group" style="margin-bottom: 8px;">
+          <label>Equivalent Command Preview</label>
+          <div id="cmdPreview" class="cmd-preview">python generate_labpbr.py --input ./input_pack --output ./build_addon --model qwen2.5vl:7b</div>
+        </div>
+
+        <!-- Execute / Stop Action Bar -->
+        <div class="action-bar">
+          <button id="btnExecute" class="btn btn-success" style="flex: 1;" onclick="executeGenerator()">
+            &#x25B6; Execute LabPBR Generator
+          </button>
+          <button id="btnStop" class="btn btn-danger" style="display: none;" onclick="stopRunningJob()">
+            &#x25A0; Stop Process
+          </button>
+        </div>
+      </div>
+
+      <!-- Right Column: Live Process Console -->
+      <div class="card console-wrapper">
+        <div class="console-toolbar">
+          <div>
+            <span style="font-weight: 600; font-size: 1.02rem;">Process Status &amp; Console</span>
+            <span id="jobStatusBadge" class="badge badge-ok" style="margin-left: 8px;">Idle</span>
+            <span id="jobTimer" style="font-size: 0.8rem; color: var(--text-muted); margin-left: 8px;"></span>
+          </div>
+          <div style="display: flex; gap: 8px; align-items: center;">
+            <label style="font-size: 0.78rem; color: var(--text-muted); display: flex; align-items: center; gap: 4px; cursor: pointer;">
+              <input type="checkbox" id="autoScrollCheck" checked /> Auto-scroll
+            </label>
+            <button class="btn btn-sm" onclick="clearConsoleLogs()">Clear</button>
+          </div>
+        </div>
+
+        <div id="consoleScreen" class="console-screen"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const API_BASE = window.location.protocol.startsWith("http")
+      ? window.location.origin
+      : "http://localhost:8765";
+
+    let logCursor = 0;
+    let userEditedZipName = false;
+    let lastJobStatus = "idle";
+    let pollTimer = null;
+
+    function appendConsoleLine(text) {
+      const screen = document.getElementById("consoleScreen");
+      const div = document.createElement("div");
+      div.className = "log-line";
+      if (text.includes("[✓]") || text.includes("Done!")) {
+        div.classList.add("success");
+      } else if (text.includes("[!]") || text.includes("ERROR") || text.includes("Warning")) {
+        div.classList.add("warn");
+      } else if (text.includes("[LLM #")) {
+        div.classList.add("llm");
+      } else if (text.includes("$ ") || text.includes("=== Starting Task")) {
+        div.classList.add("cmd");
+      }
+      div.textContent = text;
+      screen.appendChild(div);
+
+      if (document.getElementById("autoScrollCheck").checked) {
+        screen.scrollTop = screen.scrollHeight;
+      }
+    }
+
+    function onConfigChanged() {
+      const inputDir = document.getElementById("inputDir").value.trim() || "./input_pack";
+      const outputDir = document.getElementById("outputDir").value.trim() || "./build_addon";
+      const cacheFile = document.getElementById("cacheFile").value.trim() || "material_profiles.json";
+      const model = document.getElementById("modelSelect").value.trim() || "qwen2.5vl:7b";
+      const ollamaUrl = document.getElementById("ollamaUrl").value.trim() || "http://localhost:11434";
+      const noLlm = document.getElementById("flagNoLlm").checked;
+      const refreshCache = document.getElementById("flagRefreshCache").checked;
+      const flipY = document.getElementById("flagFlipY").checked;
+      const autoZip = document.getElementById("flagAutoZip").checked;
+
+      document.getElementById("modelSelect").disabled = noLlm;
+      document.getElementById("zipFileName").disabled = !autoZip;
+
+      let cmd = `python generate_labpbr.py --input "${inputDir}" --output "${outputDir}"`;
+      if (cacheFile !== "material_profiles.json") {
+        cmd += ` --cache "${cacheFile}"`;
+      }
+      if (noLlm) {
+        cmd += " --no-llm";
+      } else {
+        cmd += ` --model ${model}`;
+        if (ollamaUrl !== "http://localhost:11434") {
+          cmd += ` --ollama-url "${ollamaUrl}"`;
+        }
+      }
+      if (refreshCache) cmd += " --refresh-cache";
+      if (flipY) cmd += " --flip-y";
+
+      document.getElementById("cmdPreview").textContent = cmd;
+    }
+
+    async function refreshEnvironmentStatus() {
+      const urlParams = new URLSearchParams(window.location.search);
+      if (urlParams.get("python") === "missing") {
+        showPythonMissingState();
+        return;
+      }
+
+      const ollamaUrl = document.getElementById("ollamaUrl").value.trim() || "http://localhost:11434";
+      const inputDir = document.getElementById("inputDir").value.trim() || "./input_pack";
+
+      try {
+        const resp = await fetch(
+          `${API_BASE}/api/status?ollama_url=${encodeURIComponent(ollamaUrl)}&input_dir=${encodeURIComponent(inputDir)}`
+        );
+        if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+        const data = await resp.json();
+        renderEnvironmentStatus(data);
+      } catch (err) {
+        showPythonMissingState();
+      }
+    }
+
+    function showPythonMissingState() {
+      const pyBadge = document.getElementById("pythonBadge");
+      pyBadge.className = "badge badge-err";
+      pyBadge.textContent = "Not Detected / Offline";
+      document.getElementById("pythonInfoText").innerHTML =
+        "Could not reach the local Python backend server.";
+      document.getElementById("pythonMissingBox").style.display = "block";
+      document.getElementById("btnExecute").disabled = true;
+    }
+
+    function renderEnvironmentStatus(data) {
+      // 1. Python Runtime
+      const pyBadge = document.getElementById("pythonBadge");
+      pyBadge.className = "badge badge-ok";
+      pyBadge.textContent = `Python ${data.python.version}`;
+      document.getElementById("pythonInfoText").innerHTML =
+        `Interpreter ready:<br /><code style="font-size:0.75rem; word-break:break-all;">${data.python.executable}</code>`;
+      document.getElementById("pythonMissingBox").style.display = "none";
+
+      // 2. Python Modules
+      const modBadge = document.getElementById("modulesBadge");
+      const pillsContainer = document.getElementById("modulePills");
+      pillsContainer.innerHTML = "";
+      for (const m of data.modules.modules) {
+        const span = document.createElement("span");
+        span.className = `module-pill ${m.installed ? "ok" : "missing"}`;
+        span.textContent = m.installed ? `${m.package} (${m.version})` : `${m.package} (missing)`;
+        pillsContainer.appendChild(span);
+      }
+
+      if (data.modules.all_installed) {
+        modBadge.className = "badge badge-ok";
+        modBadge.textContent = "All Installed";
+        document.getElementById("modulesMissingBox").style.display = "none";
+      } else {
+        modBadge.className = "badge badge-err";
+        modBadge.textContent = "Missing Packages";
+        document.getElementById("modulesMissingBox").style.display = "block";
+      }
+
+      // 3. Ollama Status & Models
+      const ol = data.ollama;
+      const olBadge = document.getElementById("ollamaBadge");
+      const notInstBox = document.getElementById("ollamaNotInstalledBox");
+      const notRunBox = document.getElementById("ollamaNotRunningBox");
+      const noModBox = document.getElementById("ollamaNoModelsBox");
+      notInstBox.style.display = "none";
+      notRunBox.style.display = "none";
+      noModBox.style.display = "none";
+
+      const modelSelect = document.getElementById("modelSelect");
+      const currentSelected = modelSelect.value;
+
+      if (!ol.installed) {
+        olBadge.className = "badge badge-err";
+        olBadge.textContent = "Not Installed";
+        document.getElementById("ollamaInfoText").textContent =
+          "Ollama was not found on this machine. You can install it or run with --no-llm.";
+        notInstBox.style.display = "block";
+        document.getElementById("flagNoLlm").checked = true;
+      } else if (!ol.running) {
+        olBadge.className = "badge badge-warn";
+        olBadge.textContent = "Server Offline";
+        document.getElementById("ollamaUrlDisplay").textContent = ol.ollama_url;
+        document.getElementById("ollamaInfoText").textContent =
+          "Ollama is installed, but the local API server is not responding.";
+        notRunBox.style.display = "block";
+      } else {
+        olBadge.className = "badge badge-ok";
+        olBadge.textContent = `Connected (${ol.models.length} model${ol.models.length === 1 ? "" : "s"})`;
+        document.getElementById("ollamaInfoText").innerHTML =
+          `Connected to <code>${ol.ollama_url}</code>.`;
+
+        if (ol.models.length === 0) {
+          noModBox.style.display = "block";
+          modelSelect.innerHTML = `<option value="qwen2.5vl:7b">qwen2.5vl:7b (not pulled yet)</option>`;
+        } else {
+          modelSelect.innerHTML = "";
+          for (const m of ol.models) {
+            const opt = document.createElement("option");
+            opt.value = m.name;
+            const vTag = m.is_vision ? "[Vision] " : "";
+            const meta = [m.parameter_size, m.quantization, `${m.size_gb}GB`].filter(Boolean).join(", ");
+            opt.textContent = `${vTag}${m.name} (${meta})`;
+            modelSelect.appendChild(opt);
+          }
+          if ([...modelSelect.options].some((o) => o.value === currentSelected)) {
+            modelSelect.value = currentSelected;
+          }
+          if (!ol.has_vision_model) {
+            noModBox.style.display = "block";
+          }
+        }
+      }
+
+      // 4. Input Pack Inspection & Default Zip Name
+      updateInputPackUI(data.input_pack);
+      onConfigChanged();
+    }
+
+    function updateInputPackUI(packInfo) {
+      if (!packInfo) return;
+      const badge = document.getElementById("inputPackStatsBadge");
+      const headerBadge = document.getElementById("resolutionHeaderBadge");
+      const hint = document.getElementById("inputPackHint");
+      const resLabel = packInfo.resolution ? `${packInfo.resolution}x` : "";
+
+      if (resLabel) {
+        headerBadge.textContent = `${resLabel} Pixel-Exact Pipeline`;
+      } else {
+        headerBadge.textContent = "Pixel-Exact Pipeline";
+      }
+
+      if (!packInfo.exists) {
+        badge.className = "badge badge-warn";
+        badge.textContent = "Folder Not Found";
+        hint.textContent = `Directory does not exist yet: ${packInfo.path}`;
+      } else if (packInfo.block_texture_count === 0) {
+        badge.className = "badge badge-warn";
+        badge.textContent = "0 Textures Found";
+        hint.textContent = `No PNG textures found in ${packInfo.path}`;
+      } else {
+        badge.className = "badge badge-ok";
+        badge.textContent = `${resLabel ? resLabel + " • " : ""}${packInfo.block_texture_count} Textures Ready`;
+        hint.textContent = `Detected ${resLabel ? resLabel + " pack with " : ""}${packInfo.block_texture_count} textures (${packInfo.has_pack_mcmeta ? "pack.mcmeta present" : "no pack.mcmeta"}) in ${packInfo.path}`;
+      }
+
+      if (!userEditedZipName && packInfo.default_zip_name) {
+        document.getElementById("zipFileName").value = packInfo.default_zip_name;
+      }
+    }
+
+    async function browsePath(inputId, dialogType) {
+      const currentVal = document.getElementById(inputId).value.trim();
+      try {
+        const resp = await fetch(`${API_BASE}/api/browse`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ type: dialogType, initial_dir: currentVal }),
+        });
+        const data = await resp.json();
+        if (data.selected) {
+          document.getElementById(inputId).value = data.selected;
+          if (inputId === "inputDir") {
+            userEditedZipName = false;
+            if (data.input_pack) updateInputPackUI(data.input_pack);
+            else refreshEnvironmentStatus();
+          }
+          onConfigChanged();
+        }
+      } catch (err) {
+        appendConsoleLine(`[!] Could not open folder picker: ${err}`);
+      }
+    }
+
+    async function browseAndExtractZip() {
+      const inputDir = document.getElementById("inputDir").value.trim() || "./input_pack";
+      const btn = document.getElementById("btnExtractPack");
+      btn.disabled = true;
+      btn.textContent = "Extracting...";
+      try {
+        const resp = await fetch(`${API_BASE}/api/extract-pack`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ input_dir: inputDir }),
+        });
+        const data = await resp.json();
+        if (data.ok) {
+          userEditedZipName = false;
+          if (data.default_zip_name) {
+            document.getElementById("zipFileName").value = data.default_zip_name;
+          }
+          if (data.input_pack) {
+            updateInputPackUI(data.input_pack);
+          }
+          onConfigChanged();
+        }
+      } catch (err) {
+        appendConsoleLine(`[!] Error extracting resource pack: ${err}`);
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = "&#x1F4E6; Open &amp; Extract Resource Pack (.zip)";
+      }
+    }
+
+    async function installMissingModules() {
+      await fetch(`${API_BASE}/api/install-modules`, { method: "POST" });
+    }
+
+    async function startOllamaServer() {
+      appendConsoleLine("[*] Requesting local Ollama server startup...");
+      await fetch(`${API_BASE}/api/start-ollama`, { method: "POST" });
+      setTimeout(refreshEnvironmentStatus, 1800);
+    }
+
+    function enableNoLlmMode() {
+      document.getElementById("flagNoLlm").checked = true;
+      onConfigChanged();
+    }
+
+    async function pullOllamaModel(modelName) {
+      await fetch(`${API_BASE}/api/pull-model`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ model: modelName }),
+      });
+    }
+
+    function promptPullModel() {
+      const current = document.getElementById("modelSelect").value || "qwen2.5vl:7b";
+      const chosen = window.prompt(
+        "Enter the Ollama vision model to download (e.g. qwen2.5vl:7b, llama3.2-vision:11b, qwen2.5vl:3b):",
+        current
+      );
+      if (chosen && chosen.trim()) {
+        pullOllamaModel(chosen.trim());
+      }
+    }
+
+    async function executeGenerator() {
+      const payload = {
+        input_dir: document.getElementById("inputDir").value.trim() || "./input_pack",
+        output_dir: document.getElementById("outputDir").value.trim() || "./build_addon",
+        cache_file: document.getElementById("cacheFile").value.trim() || "material_profiles.json",
+        model: document.getElementById("modelSelect").value.trim() || "qwen2.5vl:7b",
+        ollama_url: document.getElementById("ollamaUrl").value.trim() || "http://localhost:11434",
+        no_llm: document.getElementById("flagNoLlm").checked,
+        refresh_cache: document.getElementById("flagRefreshCache").checked,
+        flip_y: document.getElementById("flagFlipY").checked,
+        auto_zip: document.getElementById("flagAutoZip").checked,
+        zip_name: document.getElementById("zipFileName").value.trim(),
+      };
+
+      const resp = await fetch(`${API_BASE}/api/execute`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      if (!resp.ok) {
+        const err = await resp.json().catch(() => ({}));
+        appendConsoleLine(`[!] Could not start generator: ${err.error || resp.statusText}`);
+      }
+    }
+
+    async function stopRunningJob() {
+      await fetch(`${API_BASE}/api/stop`, { method: "POST" });
+    }
+
+    async function clearConsoleLogs() {
+      document.getElementById("consoleScreen").innerHTML = "";
+      logCursor = 0;
+      await fetch(`${API_BASE}/api/clear-logs`, { method: "POST" });
+    }
+
+    async function pollLogs() {
+      try {
+        const resp = await fetch(`${API_BASE}/api/logs?since=${logCursor}`);
+        if (!resp.ok) return;
+        const snap = await resp.json();
+
+        if (Array.isArray(snap.logs)) {
+          for (const line of snap.logs) {
+            appendConsoleLine(line);
+          }
+        }
+        logCursor = snap.next_index;
+
+        const badge = document.getElementById("jobStatusBadge");
+        const btnExec = document.getElementById("btnExecute");
+        const btnStop = document.getElementById("btnStop");
+        const timerEl = document.getElementById("jobTimer");
+
+        if (snap.elapsed_seconds > 0) {
+          timerEl.textContent = `(${snap.elapsed_seconds.toFixed(1)}s)`;
+        } else {
+          timerEl.textContent = "";
+        }
+
+        if (snap.status === "running") {
+          badge.className = "badge badge-warn";
+          badge.textContent = `Running: ${snap.task_name || "Task"}`;
+          btnExec.disabled = true;
+          btnStop.style.display = "inline-flex";
+        } else {
+          btnExec.disabled = false;
+          btnStop.style.display = "none";
+          if (snap.status === "completed") {
+            badge.className = "badge badge-ok";
+            badge.textContent = "Completed";
+          } else if (snap.status === "error") {
+            badge.className = "badge badge-err";
+            badge.textContent = "Stopped / Error";
+          } else {
+            badge.className = "badge badge-ok";
+            badge.textContent = "Idle";
+          }
+        }
+
+        if (lastJobStatus === "running" && snap.status !== "running") {
+          refreshEnvironmentStatus();
+        }
+        lastJobStatus = snap.status;
+      } catch (_) {
+        // Ignore transient poll errors
+      }
+    }
+
+    window.addEventListener("DOMContentLoaded", () => {
+      refreshEnvironmentStatus();
+      pollLogs();
+      pollTimer = setInterval(pollLogs, 600);
+    });
+  </script>
+</body>
+</html>
